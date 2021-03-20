@@ -1,16 +1,30 @@
-# This is a sample Python script.
+from flask import Flask
+from flask_restful import Api, Resource
+from pymongo import MongoClient
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+app = Flask(__name__)
+api = Api(app)
+
+client = MongoClient("mongodb://db:27017")
+db = client.aNewDB
+UserNum = db["UserNum"]
+
+UserNum.insert_one({
+    'num_of_users': 0
+})
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+class Visit(Resource):
+    def get(self):
+        prev_num = UserNum.find({})[0]['num_of_users']
+        new_num = prev_num + 1
+        UserNum.update({}, {"$set": {"num_of_users": new_num}})
+        return str(f"Hello user {new_num}")
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+api.add_resource(Visit, '/hello')
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+app.route('/')
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')
